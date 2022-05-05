@@ -4,11 +4,31 @@ import ConnectButton from "./components/ConnectButton";
 import {
   FollowButton,
   Env,
-  Blockchain
+  Blockchain,
 } from "@cyberconnect/react-follow-button";
 import { Form, Input, Button, Space, List } from "antd";
 import { MinusCircleOutlined, PlusOutlined } from "@ant-design/icons";
 import "antd/dist/antd.min.css";
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyB7U2BxIp7VdA0nLrsuxxfUF6ybNTvTxO8",
+  authDomain: "wechat-follow.firebaseapp.com",
+  projectId: "wechat-follow",
+  storageBucket: "wechat-follow.appspot.com",
+  messagingSenderId: "1006898251801",
+  appId: "1:1006898251801:web:c20393888d3d40a8588288",
+  measurementId: "G-QCZGJCSHVG",
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+// const analytics = getAnalytics(app);
 
 export default function App() {
   const [account, setAccount] = useState<string>("");
@@ -16,25 +36,39 @@ export default function App() {
   const onFinish = (values: { list: { address: string }[] }) => {
     console.log(values);
     setAddressList(values.list.map((val) => val.address));
+    
   };
 
-  console.log(addressList);
+  console.log(addressList, account);
 
   return (
-    <div className="container">
-      <h1>Connect with Follow Button</h1>
-      <ConnectButton setAccount={setAccount}></ConnectButton>
-
-      {/* <textarea
-        className="textarea-class"
-        id="text"
-      /> */}
+    <div
+      className="container"
+      style={{
+        alignItems: "top",
+      }}
+    >
+      {account ? (
+        <Button
+          style={{
+            width: "auto",
+          }}
+        >
+          {account}
+        </Button>
+      ) : (
+        <>
+          <h1>Connect with Follow Button</h1>
+          <ConnectButton setAccount={setAccount}></ConnectButton>
+        </>
+      )}
       <Form
         name="dynamic_form_nest_item"
         onFinish={onFinish}
         autoComplete="off"
         style={{
-          marginTop: 10
+          marginTop: 10,
+          width: 800,
         }}
       >
         <Form.List name="list">
@@ -43,6 +77,9 @@ export default function App() {
               {fields.map(({ key, name, ...restField }) => (
                 <Space key={key} style={{ display: "flex" }} align="baseline">
                   <Form.Item
+                    style={{
+                      width: 800,
+                    }}
                     {...restField}
                     name={[name, "address"]}
                     rules={[{ required: true, message: "Missing address" }]}
@@ -59,7 +96,7 @@ export default function App() {
                   block
                   icon={<PlusOutlined />}
                 >
-                  Add Address
+                  Add Wallet Address
                 </Button>
               </Form.Item>
             </>
@@ -71,8 +108,13 @@ export default function App() {
           </Button>
         </Form.Item>
       </Form>
-      <List header="follow">
-        {addressList.map((address, index) => (
+      <List
+        style={{
+          width: 800,
+        }}
+        header="follow list"
+        dataSource={addressList}
+        renderItem={(address, index) => (
           <List.Item
             key={index}
             actions={[
@@ -88,13 +130,13 @@ export default function App() {
                 onFailure={(e) => {
                   console.log(e);
                 }}
-              />
+              />,
             ]}
           >
             {address}
           </List.Item>
-        ))}
-      </List>
+        )}
+      ></List>
     </div>
   );
 }
