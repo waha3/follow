@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "./styles.css";
 import ConnectButton from "./components/ConnectButton";
 import {
@@ -8,14 +8,11 @@ import {
 } from "@cyberconnect/react-follow-button";
 import { Form, Input, Button, Space, List } from "antd";
 import { MinusCircleOutlined, PlusOutlined } from "@ant-design/icons";
-import "antd/dist/antd.min.css";
 import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
+import { getDatabase, ref, set, get, onValue } from "firebase/database";
 
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+import "antd/dist/antd.min.css";
+
 const firebaseConfig = {
   apiKey: "AIzaSyB7U2BxIp7VdA0nLrsuxxfUF6ybNTvTxO8",
   authDomain: "wechat-follow.firebaseapp.com",
@@ -24,18 +21,31 @@ const firebaseConfig = {
   messagingSenderId: "1006898251801",
   appId: "1:1006898251801:web:c20393888d3d40a8588288",
   measurementId: "G-QCZGJCSHVG",
+  databaseURL: "https://wechat-follow-default-rtdb.firebaseio.com/",
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
-// const analytics = getAnalytics(app);
 
 export default function App() {
+  const db = getDatabase();
   const [account, setAccount] = useState<string>("");
   const [addressList, setAddressList] = useState<string[]>([]);
   const onFinish = (values: { list: { address: string }[] }) => {
-    setAddressList(values.list.map((val) => val.address));
+    const list = values.list.map((val) => val.address);
+    setAddressList(list);
+
+    for (let i of list) {
+      set(ref(db, "address_list/" + i), i);
+    }
   };
+
+  useEffect(() => {
+    onValue(ref(db, "address_list/"), (snapshot) => {
+      const data = snapshot.val();
+      const formatedData = Object.keys(data);
+      setAddressList(formatedData);
+    });
+  }, []);
 
   return (
     <div className="container">
