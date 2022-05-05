@@ -34,20 +34,11 @@ export default function App() {
   const [account, setAccount] = useState<string>("");
   const [addressList, setAddressList] = useState<string[]>([]);
   const onFinish = (values: { list: { address: string }[] }) => {
-    console.log(values);
     setAddressList(values.list.map((val) => val.address));
-    
   };
 
-  console.log(addressList, account);
-
   return (
-    <div
-      className="container"
-      style={{
-        alignItems: "top",
-      }}
-    >
+    <div className="container">
       {account ? (
         <Button
           style={{
