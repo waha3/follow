@@ -1,0 +1,53 @@
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@100;300;500&display=swap");
+
+button {
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  font-family: "Outfit", sans-serif;
+  font-size: 1rem;
+  font-weight: 300;
+  margin: 10px 0px;
+  width: 152px;
+  outline: none;
+  padding: 10px 20px;
+  margin: 20px;
+}
+
+h1 {
+  font-family: "Outfit", sans-serif;
+  font-size: 1.5rem;
+}
+
+.container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.connectButton {
+  background-color: white;
+  border: 1px solid black;
+  color: black;
+}
+.textarea-class {
+  width: 500px;
+  height: 500px;
+  border-radius: 5%;
+  padding: 10px;
+  border: black solid 2px;
+  font-size: 18px;
+  margin: 30px;
+}
+table,
+td {
+  border: 1px solid #333;
+}
+
+thead,
+tfoot {
+  background-color: #333;
+  color: #fff;
+}
