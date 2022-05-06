@@ -1,6 +1,6 @@
 @import url("https://fonts.googleapis.com/css2?family=Outfit:wght@100;300;500&display=swap");
 
-button {
+/* button {
   border: none;
   border-radius: 50px;
   cursor: pointer;
@@ -12,7 +12,7 @@ button {
   outline: none;
   padding: 10px 20px;
   margin: 20px;
-}
+} */
 
 h1 {
   font-family: "Outfit", sans-serif;
