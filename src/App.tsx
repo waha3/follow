@@ -6,10 +6,21 @@ import {
   Env,
   Blockchain,
 } from "@cyberconnect/react-follow-button";
-import { Form, Input, Button, Space, List } from "antd";
+import { Form, Input, Button, Space, List, message } from "antd";
 import { MinusCircleOutlined, PlusOutlined } from "@ant-design/icons";
 import { initializeApp } from "firebase/app";
-import { getDatabase, ref, set, get, onValue } from "firebase/database";
+import {
+  getDatabase,
+  ref,
+  set,
+  onValue,
+  query,
+  startAt,
+  limitToFirst,
+  limitToLast,
+  endAt,
+  orderByKey,
+} from "firebase/database";
 
 import "antd/dist/antd.min.css";
 
@@ -30,6 +41,8 @@ export default function App() {
   const db = getDatabase();
   const [account, setAccount] = useState<string>("");
   const [addressList, setAddressList] = useState<string[]>([]);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(20);
   const onFinish = (values: { list: { address: string }[] }) => {
     const list = values.list.map((val) => val.address);
     setAddressList(list);
@@ -40,12 +53,30 @@ export default function App() {
   };
 
   useEffect(() => {
-    onValue(ref(db, "address_list/"), (snapshot) => {
+    const qs = query(
+      ref(db, "address_list/"),
+      orderByKey()
+      // limitToFirst((currentPage - 1) * pageSize + 1),
+      // limitToLast(currentPage * pageSize)
+    );
+
+    // onValue(ref(db, "address_list/"), (snapshot) => {
+    //   const data = snapshot.val();
+    //   const formatedData = Object.keys(data);
+    //   setAddressList(formatedData);
+    // });
+
+    onValue(qs, (snapshot) => {
       const data = snapshot.val();
       const formatedData = Object.keys(data);
       setAddressList(formatedData);
     });
-  }, []);
+  }, [pageSize, currentPage]);
+
+  const handlePageChange = (page: number, pageSize: number) => {
+    setCurrentPage(page);
+    setPageSize(pageSize);
+  };
 
   return (
     <div className="container">
@@ -115,6 +146,11 @@ export default function App() {
         }}
         header="follow list"
         dataSource={addressList}
+        pagination={{
+          pageSize: pageSize,
+          current: currentPage,
+          onChange: handlePageChange,
+        }}
         renderItem={(address, index) => (
           <List.Item
             key={index}
@@ -126,10 +162,10 @@ export default function App() {
                 env={Env.PRODUCTION}
                 chain={Blockchain.ETH}
                 onSuccess={(e) => {
-                  console.log(e);
+                  message.success(e.code);
                 }}
                 onFailure={(e) => {
-                  console.log(e);
+                  message.error(e.code + "  " + e.message);
                 }}
               />,
             ]}
@@ -137,7 +173,7 @@ export default function App() {
             {address}
           </List.Item>
         )}
-      ></List>
+      />
     </div>
   );
 }
