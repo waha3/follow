@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import "./styles.css";
 import ConnectButton from "./components/ConnectButton";
 import {
@@ -6,7 +6,7 @@ import {
   Env,
   Blockchain,
 } from "@cyberconnect/react-follow-button";
-import { Form, Input, Button, Space, List, message } from "antd";
+import { Form, Input, Button, Space, List, message, Row, Col } from "antd";
 import { MinusCircleOutlined, PlusOutlined } from "@ant-design/icons";
 import { initializeApp } from "firebase/app";
 import {
@@ -35,7 +35,7 @@ const firebaseConfig = {
   databaseURL: "https://wechat-follow-default-rtdb.firebaseio.com/",
 };
 
-const app = initializeApp(firebaseConfig);
+initializeApp(firebaseConfig);
 
 export default function App() {
   const db = getDatabase();
@@ -43,6 +43,8 @@ export default function App() {
   const [addressList, setAddressList] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(20);
+  const [batchBtnDisbled, setBatchBtnDisbled] = useState(true);
+
   const onFinish = (values: { list: { address: string }[] }) => {
     const list = values.list.map((val) => val.address);
     setAddressList(list);
@@ -53,29 +55,63 @@ export default function App() {
   };
 
   useEffect(() => {
-    const qs = query(
-      ref(db, "address_list/"),
-      orderByKey()
-      // limitToFirst((currentPage - 1) * pageSize + 1),
-      // limitToLast(currentPage * pageSize)
-    );
-
-    // onValue(ref(db, "address_list/"), (snapshot) => {
-    //   const data = snapshot.val();
-    //   const formatedData = Object.keys(data);
-    //   setAddressList(formatedData);
-    // });
-
+    const qs = query(ref(db, "address_list/"), orderByKey());
     onValue(qs, (snapshot) => {
       const data = snapshot.val();
-      const formatedData = Object.keys(data);
+      const formatedData = Object.keys(data)
+        .map((val) => ({
+          random: Math.random(),
+          address: val,
+        }))
+        .sort((a, b) => a.random - b.random)
+        .map((val) => val.address);
       setAddressList(formatedData);
     });
+  }, []);
+
+  useEffect(() => {
+    setBatchBtnDisbled(true);
+    // batch follow
+    let id = setInterval(() => {
+      let dom = Array.from(
+        document.querySelectorAll(".ant-list-item-action .buttonText-0-2-8")
+      );
+      let btnTextList = dom.map((item) => item.textContent);
+
+      if (
+        btnTextList.length === pageSize &&
+        btnTextList.every(
+          (text) =>
+            text.toLowerCase() === "follow" ||
+            text.toLowerCase() === "following"
+        )
+      ) {
+        setBatchBtnDisbled(false);
+
+        window.clearInterval(id);
+      }
+    }, 100);
+    return () => {
+      window.clearInterval(id);
+    };
   }, [pageSize, currentPage]);
 
   const handlePageChange = (page: number, pageSize: number) => {
     setCurrentPage(page);
     setPageSize(pageSize);
+  };
+
+  const handleBatchFollow = () => {
+    let dom = Array.from(
+      document.querySelectorAll(".ant-list-item-action .buttonText-0-2-8")
+    );
+
+    for (let i of dom) {
+      if (i.textContent.toLowerCase() === "follow") {
+        let ele = i;
+        ele.click();
+      }
+    }
   };
 
   return (
@@ -144,7 +180,20 @@ export default function App() {
         style={{
           width: 800,
         }}
-        header="follow list"
+        header={
+          <Row justify="space-between">
+            <Col>follow list</Col>
+            <Col>
+              <Button
+                type="primary"
+                disabled={batchBtnDisbled}
+                onClick={handleBatchFollow}
+              >
+                batch follow
+              </Button>
+            </Col>
+          </Row>
+        }
         dataSource={addressList}
         pagination={{
           pageSize: pageSize,
@@ -153,9 +202,10 @@ export default function App() {
         }}
         renderItem={(address, index) => (
           <List.Item
-            key={index}
+            key={address}
             actions={[
               <FollowButton
+                key={address}
                 provider={window.ethereum}
                 namespace="CyberConnect"
                 toAddr={address}
